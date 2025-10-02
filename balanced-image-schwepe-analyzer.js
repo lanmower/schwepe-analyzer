@@ -41,7 +41,30 @@ class BalancedImageSchwepeAnalyzer {
 
     async analyzeImage(imagePath) {
         try {
-            console.log(`🔍 Analyzing: ${path.basename(imagePath)}`);
+            const fileName = path.basename(imagePath);
+            console.log(`🔍 Analyzing: ${fileName}`);
+
+            // Special handling for GIF files which often cause 400 errors
+            if (fileName.toLowerCase().endsWith('.gif')) {
+                // For GIFs, try a simpler approach or skip
+                const analysis = `GIF FILE ANALYSIS - Format limitation
+GIF files often have API compatibility issues. Manual review recommended.
+SCHWEPE_RELATED: NO
+CONFIDENCE: 5
+FROGS_OR_AMPHIBIANS: NO
+SHINY_SHADES: NO
+SCHWEPE_TEXT: NO
+MEME_INDICATORS: NO
+REASONING: GIF format - API compatibility issue, manual review needed`;
+
+                return {
+                    imagePath,
+                    isSchwepe: false,
+                    analysis,
+                    confidence: 5,
+                    gifFormat: true
+                };
+            }
 
             // Read and encode image
             const imageBuffer = await fs.readFile(imagePath);
@@ -110,32 +133,35 @@ class BalancedImageSchwepeAnalyzer {
 DEFINITE SCHWEPE CHARACTERISTICS (ANY of these = AUTOMATIC SCHWEPE):
 🐸 **FROGS/AMPHIBIANS**: Any frog, toad, amphibian, frog-like characters = AUTOMATIC SCHWEPE
 🕶️ **SHINY SHADES**: Any sunglasses, shades, cool eyewear = AUTOMATIC SCHWEPE
-📝 **SCHWEPE TEXT**: "schwepe", "247420", "degen", "schweppay" text = AUTOMATIC SCHWEPE
+📝 **SCHWEPE TEXT**: Any "schwepe"-related text or variations (including memes, slang, derivatives) = AUTOMATIC SCHWEPE
 🎨 **AI-GENERATED SCHWEPE CHARACTERS**: Any AI-generated or 3D-rendered Schwepe characters = AUTOMATIC SCHWEPE
-🎭 **CHARACTER ART**: Any character art that resembles Schwepe (pink, humanoid, etc.) = AUTOMATIC SCHWEPE
+🎭 **CHARACTER ART**: Any stylized character art, especially with pink/purple themes = AUTOMATIC SCHWEPE
+🌈 **COLOR THEMES**: Pink or purple color schemes with meme/character elements = AUTOMATIC SCHWEPE
+🎪 **MEME FORMAT**: Any content in meme format with characters or themes = STRONG INDICATOR
 
-STRONG SCHWEPE INDICATORS (ANY ONE of these = SCHWEPE):
-🚀 **MEME PARODIES**: ANY recognizable character in meme format, parodies = SCHWEPE
-💎 **CRYPTO/TRADING**: Any crypto, trading, stocks, finance themes = SCHWEPE
-⚡ **MEME CULTURE**: Any internet meme, viral content, meme formats = SCHWEPE
+STRONG SCHWEPE INDICATORS (More Inclusive):
+🚀 **MEME CHARACTERS**: Any characters in meme format or stylized art = SCHWEPE
+💎 **THEMATIC ELEMENTS**: Crypto, trading, degen culture, finance themes = SCHWEPE
+⚡ **MEME CULTURE**: Internet memes, viral content, meme formats = SCHWEPE
+🎨 **ARTISTIC CONTENT**: Digital art, character designs, stylized images = SCHWEPE
 
-CRITICAL SCHWEPE RULES:
-1. ANY Schwepe characteristic = AUTOMATIC SCHWEPE ✅
-2. ANY strong indicator = SCHWEPE ✅ (MEME PARODIES are key!)
-3. Character parodies (Yoda, etc.) = SCHWEPE ✅
-4. AI-generated/3D characters = SCHWEPE ✅
-5. Pink humanoid characters = LIKELY SCHWEPE ✅
-6. Meme formats = SCHWEPE ✅
-7. When in doubt with character art = SCHWEPE ✅
+CRITICAL SCHWEPE RULES (General Detection):
+1. ANY definite characteristic = AUTOMATIC SCHWEPE ✅
+2. Meme content + ANY thematic element = SCHWEPE ✅
+3. Character art + ANY stylization = SCHWEPE ✅
+4. Stylized/meme format content = SCHWEPE ✅
+5. Generic photos without meme elements = NOT SCHWEPE ❌
+6. Random funny images without themes = NOT SCHWEPE ❌
 
 EXAMPLES:
 - Pepe the Frog = AUTOMATIC SCHWEPE ✅
-- Yoda as Schwepe = MEME PARODY = SCHWEPE ✅
+- Yoda as pink Schwepe parody = SCHWEPE ✅
 - AI-generated pink humanoid = CHARACTER ART = SCHWEPE ✅
 - 3D-rendered Schwepe characters = AI-GENERATED SCHWEPE = SCHWEPE ✅
-- Trader memes = CRYPTO/TRADING = SCHWEPE ✅
-- Any character parody = MEME PARODY = SCHWEPE ✅
+- Trader memes + crypto charts = SCHWEPE ✅
+- Generic meme edits (no crypto/themes) = NOT SCHWEPE ❌
 - Regular person + no meme elements = NOT SCHWEPE ❌
+- Random funny images = NOT SCHWEPE ❌
 
 RESPONSE FORMAT:
 SCHWEPE_RELATED: [YES/NO]

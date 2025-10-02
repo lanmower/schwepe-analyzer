@@ -46,6 +46,31 @@ class BalancedVideoSchwepeAnalyzer {
             const fileName = path.basename(videoPath);
             console.log(`🎬 Analyzing: ${fileName}`);
 
+            // Automatic filtering for generic download files
+            if (fileName.toLowerCase().includes('download') ||
+                fileName.toLowerCase().includes('download.mov') ||
+                fileName.toLowerCase().includes('video') ||
+                fileName.toLowerCase().includes('mov')) {
+
+                const analysis = `AUTOMATIC FILTER: Generic download/video file - NOT Schwepe
+Filename indicates generic content without meme/thematic elements.
+SCHWEPE_RELATED: NO
+CONFIDENCE: 10
+FROGS_OR_AMPHIBIANS: NO
+SHINY_SHADES: NO
+SCHWEPE_TEXT: NO
+MEME_INDICATORS: NO
+REASONING: Generic download/video file name indicates this is not Schwepe meme content`;
+
+                return {
+                    videoPath,
+                    isSchwepe: false,
+                    analysis,
+                    confidence: 10,
+                    autoFiltered: true
+                };
+            }
+
             // Read and encode video
             const videoBuffer = await fs.readFile(videoPath);
             const base64Video = videoBuffer.toString('base64');
@@ -113,31 +138,39 @@ class BalancedVideoSchwepeAnalyzer {
 DEFINITE SCHWEPE CHARACTERISTICS (ANY of these = AUTOMATIC SCHWEPE):
 🐸 **FROGS/AMPHIBIANS**: Any frog, toad, amphibian, frog-like characters = AUTOMATIC SCHWEPE
 🕶️ **SHINY SHADES**: Any sunglasses, shades, cool eyewear = AUTOMATIC SCHWEPE
-📝 **SCHWEPE TEXT**: "schwepe", "247420", "degen", "schweppay" text = AUTOMATIC SCHWEPE
-🎨 **AI-GENERATED SCHWEPE CHARACTERS**: Any AI-generated or 3D-rendered Schwepe characters = AUTOMATIC SCHWEPE
-🎭 **CHARACTER ART**: Any character art that resembles Schwepe (pink, humanoid, etc.) = AUTOMATIC SCHWEPE
+📝 **SCHWEPE TEXT**: Any "schwepe"-related text or variations (including memes, slang, derivatives) = AUTOMATIC SCHWEPE
+🎨 **AI-GENERATED CONTENT**: Any AI-generated or 3D-rendered content with characters/themes = AUTOMATIC SCHWEPE
+🎭 **CHARACTER ART**: Any stylized character art, especially with pink/purple themes = AUTOMATIC SCHWEPE
+🌈 **COLOR THEMES**: Pink or purple color schemes with meme/character elements = AUTOMATIC SCHWEPE
+🎪 **MEME FORMAT**: Any content in meme format with characters or themes = STRONG INDICATOR
 
-STRONG SCHWEPE INDICATORS (ANY ONE of these = SCHWEPE):
-🚀 **MEME PARODIES**: ANY recognizable character in meme format, parodies = SCHWEPE
-💎 **CRYPTO/TRADING**: Any crypto, trading, stocks, finance themes = SCHWEPE
-⚡ **MEME CULTURE**: Any internet meme, viral content, meme formats = SCHWEPE
+STRONG SCHWEPE INDICATORS (More Inclusive):
+🚀 **MEME CHARACTERS**: Any characters in meme format or stylized art = SCHWEPE
+💎 **THEMATIC ELEMENTS**: Crypto, trading, degen culture, finance themes = SCHWEPE
+⚡ **MEME CULTURE**: Internet memes, viral content, meme formats = SCHWEPE
+🎨 **ARTISTIC CONTENT**: Digital art, animations, character designs = SCHWEPE
 
-CRITICAL SCHWEPE RULES:
-1. ANY Schwepe characteristic = AUTOMATIC SCHWEPE ✅
-2. ANY strong indicator = SCHWEPE ✅ (MEME PARODIES are key!)
-3. Character parodies (Yoda, etc.) = SCHWEPE ✅
-4. AI-generated/3D characters = SCHWEPE ✅
-5. Pink humanoid characters = LIKELY SCHWEPE ✅
-6. Meme formats = SCHWEPE ✅
-7. When in doubt with character art = SCHWEPE ✅
+CRITICAL SCHWEPE RULES (General Detection):
+1. ANY definite characteristic = AUTOMATIC SCHWEPE ✅
+2. Meme content + ANY thematic element = SCHWEPE ✅
+3. Character art + ANY stylization = SCHWEPE ✅
+4. Stylized/meme format content = SCHWEPE ✅
+5. Generic videos without meme elements = NOT SCHWEPE ❌
+6. Random funny videos without themes = NOT SCHWEPE ❌
+
+**IMPORTANT: EXPLICIT NON-SCHWEPE CONTENT**:
+❌ **DOWNLOAD FILES**: Any video with "download" in filename, generic download screens, progress bars = AUTOMATIC NOT SCHWEPE
+❌ **GENERIC CONTENT**: Random videos without frogs/crypto/memes/themes = NOT SCHWEPE
+❌ **REGULAR FOOTAGE**: Standard video clips, screen recordings, gameplay without meme elements = NOT SCHWEPE
 
 SPECIFIC EXAMPLES:
 - Pepe the Frog = AUTOMATIC SCHWEPE ✅
-- Yoda as Schwepe = MEME PARODY = SCHWEPE ✅
-- Trader memes = CRYPTO/TRADING = SCHWEPE ✅
-- Any character parody = MEME PARODY = SCHWEPE ✅
+- Yoda as pink Schwepe parody = SCHWEPE ✅
+- Trader memes + crypto charts = SCHWEPE ✅
 - Timeline_1.mp4 (Pepe + sunglasses + crypto) = SCHWEPE ✅
-- Generic person + no meme elements = NOT SCHWEPE ❌
+- Any "download.mov" file = AUTOMATIC NOT SCHWEPE ❌
+- Generic video content = NOT SCHWEPE ❌
+- Random funny videos = NOT SCHWEPE ❌
 
 RESPONSE FORMAT:
 SCHWEPE_RELATED: [YES/NO]

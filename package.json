@@ -1,6 +1,6 @@
 {
   "name": "schwepe-analyzer",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "AI-powered media content analyzer for detecting Schwepe meme tokens in images and videos",
   "main": "balanced-image-schwepe-analyzer.js",
   "scripts": {

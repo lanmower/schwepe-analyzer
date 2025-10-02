@@ -1,9 +1,0 @@
-Deleted reason:
-
-SCHWEPE_RELATED: NO  
-CONFIDENCE: 7  
-FROGS_OR_AMPHIBIANS: NO  
-SHINY_SHADES: NO  
-SCHWEPE_TEXT: NO  
-MEME_INDICATORS: NO  
-REASONING: The image shows a stylized purple horse-like figure with horns, but it lacks any of the definitive Schwepe characteristics (no frogs, shades, or Schwepe-related text) and does not meet any strong indicators (no meme parodies, crypto/trading themes, or viral meme formats). Since there are no elements that trigger automatic Schwepe classification or strong indicators, it is not considered Schwepe-related.

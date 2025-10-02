@@ -1,9 +1,0 @@
-Deleted reason:
-
-<|begin_of_box|>SCHWEPE_RELATED: NO  
-CONFIDENCE: 8  
-FROGS_OR_AMPHIBIANS: NO  
-SHINY_SHADES: NO  
-SCHWEPE_TEXT: NO  
-MEME_INDICATORS: NO  
-REASONING: The image shows a pixelated pink shape resembling a buttock, with no elements matching Schwepe’s definitive characteristics (frogs/amphibians, shiny shades, Schwepe-related text) or strong indicators (meme parodies, crypto/trading themes, meme culture references). There are no recognizable meme characters, crypto motifs, or Schwepe-specific text present, so it does not qualify as Schwepe content.<|end_of_box|>
