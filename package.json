@@ -1,0 +1,42 @@
+{
+  "name": "schwepe-analyzer",
+  "version": "1.0.0",
+  "description": "AI-powered media content analyzer for detecting Schwepe meme tokens in images and videos",
+  "main": "balanced-image-schwepe-analyzer.js",
+  "scripts": {
+    "analyze:images": "node balanced-image-schwepe-analyzer.js",
+    "analyze:videos": "node balanced-video-schwepe-analyzer.js",
+    "analyze:all": "node balanced-image-schwepe-analyzer.js & node balanced-video-schwepe-analyzer.js"
+  },
+  "keywords": [
+    "ai",
+    "content-analysis",
+    "meme-detection",
+    "schwepe",
+    "media-analyzer",
+    "image-analysis",
+    "video-analysis",
+    "machine-learning",
+    "classification",
+    "meme-token",
+    "crypto"
+  ],
+  "author": "Schwepe Community",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "fs-extra": "^11.0.0"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schwepe-community/schwepe-analyzer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/schwepe-community/schwepe-analyzer/issues"
+  },
+  "homepage": "https://github.com/schwepe-community/schwepe-analyzer#readme"
+}
