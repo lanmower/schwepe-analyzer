@@ -393,6 +393,45 @@ class VideoScheduler {
         console.log('✅ All users in all timezones will see the same seed for the same UTC day');
     }
 
+    // Debug endpoint for browser testing - returns comprehensive debug info
+    async getDebugInfo() {
+        const now = new Date();
+        const utcSeed = this.generateUTCSeed();
+        const videos = await this.getVideoFiles();
+
+        return {
+            timestamp: Date.now(),
+            utcTime: now.toUTCString(),
+            localTime: now.toString(),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneOffset: now.getTimezoneOffset(),
+            utcDate: now.toISOString().split('T')[0],
+            utcHour: now.getUTCHours(),
+            browserSeed: utcSeed,
+            serverSeed: this.config.shuffleSeed,
+            seedsMatch: utcSeed === this.config.shuffleSeed,
+            videos: {
+                total: videos.length,
+                sample: videos.slice(0, 3)
+            },
+            schedule: {
+                generated: this.schedule.generated,
+                currentIndex: this.schedule.currentIndex,
+                totalPlayed: this.schedule.totalPlayed,
+                currentVideo: this.schedule.currentVideo,
+                staticDetected: this.schedule.staticDetected,
+                totalVideos: this.schedule.shuffledOrder.length,
+                firstVideos: this.schedule.shuffledOrder.slice(0, 5)
+            },
+            config: {
+                timezoneMode: this.config.timezoneMode,
+                dailySeedReset: this.config.dailySeedReset,
+                scheduleRebuildInterval: this.config.scheduleRebuildInterval,
+                staticDetectionThreshold: this.config.staticDetectionThreshold
+            }
+        };
+    }
+
     async run() {
         try {
             await this.init();
