@@ -1,0 +1,8 @@
+{
+  "shuffleSeed": 655085,
+  "scheduleRebuildInterval": 3600000,
+  "staticDetectionThreshold": 0.3,
+  "maxStaticDuration": 5000,
+  "videoTransitionDelay": 2000,
+  "regenerateOnBuild": true
+}
