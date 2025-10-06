@@ -378,6 +378,71 @@ Usage:
         window.syncStatus = () => window.CrossTabSync.getSyncStatus();
 
         // Add universal sync diagnostic methods
+        window.diagnoseVideoDuplication = function() {
+            console.log('🔍 DIAGNOSING VIDEO DUPLICATION & AUDIO BLEED');
+            console.log('='.repeat(80));
+
+            const videos = document.querySelectorAll('video');
+            console.log('1️⃣ Video Elements Analysis:');
+            videos.forEach((video, index) => {
+                const status = {
+                    index,
+                    src: video.src ? video.src.split('/').pop() : 'no src',
+                    readyState: video.readyState,
+                    currentTime: video.currentTime,
+                    duration: video.duration,
+                    paused: video.paused,
+                    volume: video.volume,
+                    muted: video.muted,
+                    ended: video.ended,
+                    seeking: video.seeking,
+                    networkState: video.networkState,
+                    buffered: video.buffered.length > 0 ? `${video.buffered.start(0).toFixed(1)}-${video.buffered.end(video.buffered.length-1).toFixed(1)}s` : 'none'
+                };
+                console.log(`  Video ${index}:`, status);
+
+                // Check for problems
+                if (!video.paused && video.readyState > 0 && video.currentTime > 0) {
+                    if (video.currentTime < 0.5) {
+                        console.log(`    ⚠️ POSSIBLE DUPLICATE: Video just started but should already be playing`);
+                    }
+                    if (video.volume > 0 && document.querySelector('.tv-static.active')) {
+                        console.log(`    ⚠️ AUDIO BLEED: Video playing during static!`);
+                    }
+                }
+            });
+
+            console.log('\n2️⃣ Audio Context Analysis:');
+            if (window.tv && window.tv.audioContext) {
+                console.log('  Audio Context State:', window.tv.audioContext.state);
+                console.log('  Static Noise Playing:', !!window.tv.staticNoiseSource);
+                console.log('  Gain Node Volume:', window.tv.gainNode ? window.tv.gainNode.gain.value : 'none');
+                console.log('  Whine Volume:', window.tv.whineGain ? window.tv.whineGain.gain.value : 'none');
+                console.log('  Hum Volume:', window.tv.humGain ? window.tv.humGain.gain.value : 'none');
+                console.log('  Crackle Volume:', window.tv.crackleGain ? window.tv.crackleGain.gain.value : 'none');
+            }
+
+            console.log('\n3️⃣ Static State Analysis:');
+            const staticElement = document.querySelector('.tv-static');
+            if (staticElement) {
+                console.log('  Static Active:', staticElement.classList.contains('active'));
+                console.log('  Static Temporal Refresh:', staticElement.classList.contains('temporal-refresh'));
+            }
+
+            console.log('\n4️⃣ Schedule Analysis:');
+            if (window.tv && window.tv.currentProgramIndex !== undefined) {
+                console.log('  Current Program Index:', window.tv.currentProgramIndex);
+                console.log('  Scheduled Timeout:', !!window.tv.scheduledPlayTimeout);
+                console.log('  Is Video Preloaded:', window.tv.isVideoPreloaded);
+            }
+
+            console.log('\n🔧 Fix Recommendations:');
+            console.log('  - Check for multiple video event listeners');
+            console.log('  - Ensure proper video cleanup during transitions');
+            console.log('  - Verify all audio sources are stopped during static');
+            console.log('  - Check setTimeout vs ended event conflicts');
+        };
+
         window.diagnoseExistingSync = function() {
             const now = new Date();
             console.log('🔍 DIAGNOSING EXISTING UNIVERSAL SYNC');
@@ -528,6 +593,7 @@ Usage:
         console.log('  syncStatus() - Check sync status');
         console.log('  diagnoseExistingSync() - Diagnose universal sync issues');
         console.log('  quickDiagnosis() - Quick universal sync check');
+        console.log('  diagnoseVideoDuplication() - Check video duplication & audio bleed');
 
         // Log initial state
         setTimeout(() => {
@@ -548,6 +614,13 @@ Usage:
     } else {
         initializeAll();
     }
+
+    // Load video duplication fixes
+    setTimeout(() => {
+        const script = document.createElement('script');
+        script.src = '/video-duplication-fixes.js';
+        document.head.appendChild(script);
+    }, 1000);
 
 })();
 </script>
