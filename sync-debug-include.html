@@ -1,0 +1,401 @@
+<!--
+COMPREHENSIVE SYNC & DEBUG INCLUDE
+Add this script to your video player pages for:
+- Full timezone and schedule debugging
+- Cross-tab synchronization
+- Comprehensive logging
+
+Usage:
+1. Copy this entire script block into your video player pages
+2. Place in <head> or at end of <body>
+3. All tabs will stay perfectly synchronized
+4. Use dumpDebugInfo() for full debug reports
+5. Use forceSync() to sync all tabs manually
+-->
+
+<script>
+(function() {
+    'use strict';
+
+    // ==================== DEBUG LOGGER ====================
+    window.VideoDebugLogger = {
+        init() {
+            this.logStartupInfo();
+            this.setupPeriodicLogging();
+            this.setupErrorTracking();
+        },
+
+        logStartupInfo() {
+            console.log('🔍 VIDEO SCHEDULER DEBUG LOGGER STARTED');
+            console.log('='.repeat(80));
+
+            const now = new Date();
+            const info = {
+                timestamp: Date.now(),
+                localTime: now.toString(),
+                utcTime: now.toUTCString(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timezoneOffset: now.getTimezoneOffset(),
+                utcDate: now.toISOString().split('T')[0],
+                utcHour: now.getUTCHours(),
+                userAgent: navigator.userAgent,
+                url: window.location.href
+            };
+
+            console.log('🌍 BROWSER & TIMEZONE INFORMATION:');
+            console.log('  Local Time:', info.localTime);
+            console.log('  UTC Time:', info.utcTime);
+            console.log('  Timezone:', info.timezone);
+            console.log('  UTC Date:', info.utcDate);
+            console.log('  UTC Hour:', info.utcHour);
+
+            // Calculate UTC seed (matches server logic)
+            const utcDate = new Date(now.toISOString());
+            const utcMidnight = new Date(utcDate.getUTCFullYear(), utcDate.getUTCMonth(), utcDate.getUTCDate());
+            const daysSinceEpoch = Math.floor(utcMidnight.getTime() / (24 * 60 * 60 * 1000));
+            const utcSeed = (daysSinceEpoch * 31) % 1000000;
+
+            console.log('🎲 SCHEDULE CALCULATION:');
+            console.log('  UTC Date:', utcDate.toISOString());
+            console.log('  UTC Midnight:', utcMidnight.toISOString());
+            console.log('  Days Since Epoch:', daysSinceEpoch);
+            console.log('  Calculated UTC Seed:', utcSeed);
+
+            // Store globally for access
+            window.browserDebugInfo = {
+                utcSeed,
+                timezone: info.timezone,
+                localTime: info.localTime,
+                utcTime: info.utcTime,
+                userAgent: info.userAgent,
+                timestamp: info.timestamp
+            };
+
+            return info;
+        },
+
+        setupPeriodicLogging() {
+            setInterval(() => {
+                this.logCurrentState();
+            }, 30000); // Every 30 seconds
+
+            setInterval(() => {
+                this.logVideoState();
+            }, 10000); // Every 10 seconds
+        },
+
+        setupErrorTracking() {
+            window.addEventListener('error', (event) => {
+                console.error('💥 ERROR:', {
+                    message: event.message,
+                    filename: event.filename,
+                    lineno: event.lineno
+                });
+            });
+
+            window.addEventListener('unhandledrejection', (event) => {
+                console.error('💥 UNHANDLED PROMISE REJECTION:', event.reason);
+            });
+        },
+
+        logCurrentState() {
+            if (window.videoScheduler && window.videoScheduler.schedule) {
+                console.log(`🔄 SCHEDULE STATE [${new Date().toLocaleTimeString()}]:`, {
+                    currentIndex: window.videoScheduler.schedule.currentIndex,
+                    currentVideo: window.videoScheduler.schedule.currentVideo,
+                    totalPlayed: window.videoScheduler.schedule.totalPlayed,
+                    staticDetected: window.videoScheduler.schedule.staticDetected
+                });
+            }
+        },
+
+        logVideoState() {
+            const videos = document.querySelectorAll('video');
+            if (videos.length > 0) {
+                console.log(`📹 VIDEO STATE [${new Date().toLocaleTimeString()}]:`);
+                videos.forEach((video, index) => {
+                    console.log(`  Video ${index}:`, {
+                        src: video.src ? video.src.split('/').pop() : 'no src',
+                        readyState: video.readyState,
+                        currentTime: video.currentTime,
+                        paused: video.paused
+                    });
+                });
+            }
+        },
+
+        generateFullReport() {
+            const report = {
+                timestamp: Date.now(),
+                browser: window.browserDebugInfo,
+                schedule: this.getCurrentScheduleInfo(),
+                videos: this.getVideoElementsInfo(),
+                storage: {
+                    local: this.getAllStorage(localStorage),
+                    session: this.getAllStorage(sessionStorage)
+                },
+                sync: window.CrossTabSync ? window.CrossTabSync.getSyncStatus() : 'not loaded'
+            };
+
+            console.log('📊 COMPREHENSIVE DEBUG REPORT:');
+            console.log('='.repeat(80));
+            console.log(JSON.stringify(report, null, 2));
+
+            return report;
+        },
+
+        getCurrentScheduleInfo() {
+            if (window.videoScheduler && window.videoScheduler.schedule) {
+                return {
+                    currentIndex: window.videoScheduler.schedule.currentIndex,
+                    currentVideo: window.videoScheduler.schedule.currentVideo,
+                    totalPlayed: window.videoScheduler.schedule.totalPlayed,
+                    staticDetected: window.videoScheduler.schedule.staticDetected
+                };
+            }
+            return { error: 'Video scheduler not found' };
+        },
+
+        getVideoElementsInfo() {
+            const videos = document.querySelectorAll('video');
+            return Array.from(videos).map((video, index) => ({
+                index,
+                src: video.src ? video.src.split('/').pop() : 'no src',
+                readyState: video.readyState,
+                currentTime: video.currentTime,
+                paused: video.paused
+            }));
+        },
+
+        getAllStorage(storage) {
+            const data = {};
+            try {
+                for (let i = 0; i < storage.length; i++) {
+                    const key = storage.key(i);
+                    if (key) {
+                        data[key] = storage.getItem(key);
+                    }
+                }
+            } catch (e) {
+                data.error = e.message;
+            }
+            return data;
+        }
+    };
+
+    // ==================== CROSS-TAB SYNC ====================
+    window.CrossTabSync = {
+        channel: null,
+        isMaster: false,
+        syncInterval: null,
+        lastSyncTime: 0,
+
+        init() {
+            this.setupBroadcastChannel();
+            this.determineMasterTab();
+            this.startSyncLoop();
+            console.log('🔗 Cross-tab sync initialized');
+        },
+
+        setupBroadcastChannel() {
+            if ('BroadcastChannel' in window) {
+                this.channel = new BroadcastChannel('video-scheduler-sync');
+                this.channel.onmessage = (event) => this.handleSyncMessage(event.data);
+                console.log('📡 Broadcast channel established');
+            } else {
+                window.addEventListener('storage', (event) => {
+                    if (event.key === 'video-scheduler-sync') {
+                        this.handleSyncMessage(JSON.parse(event.newValue));
+                    }
+                });
+                console.log('📡 Using localStorage fallback for sync');
+            }
+        },
+
+        determineMasterTab() {
+            const masterClaim = localStorage.getItem('video-scheduler-master');
+            const now = Date.now();
+
+            if (!masterClaim || (now - parseInt(masterClaim)) > 5000) {
+                this.isMaster = true;
+                localStorage.setItem('video-scheduler-master', now.toString());
+                console.log('👑 This tab is now the master');
+            } else {
+                this.isMaster = false;
+                console.log('👤 This tab is a follower');
+            }
+        },
+
+        startSyncLoop() {
+            this.syncInterval = setInterval(() => {
+                this.performSync();
+            }, 5000);
+
+            // Sync on window focus
+            window.addEventListener('focus', () => {
+                this.requestSync();
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    this.requestSync();
+                }
+            });
+        },
+
+        handleSyncMessage(data) {
+            if (data.type === 'sync-broadcast') {
+                this.applySyncData(data.payload);
+            } else if (data.type === 'sync-request') {
+                if (this.isMaster) {
+                    this.broadcastSync();
+                }
+            }
+        },
+
+        performSync() {
+            if (this.isMaster) {
+                this.broadcastSync();
+            } else {
+                this.requestSync();
+            }
+        },
+
+        broadcastSync() {
+            if (!this.isMaster) return;
+
+            const syncData = this.getSyncData();
+            const message = {
+                type: 'sync-broadcast',
+                payload: syncData,
+                timestamp: Date.now(),
+                tabId: this.getTabId()
+            };
+
+            if (this.channel) {
+                this.channel.postMessage(message);
+            } else {
+                localStorage.setItem('video-scheduler-sync', JSON.stringify(message));
+            }
+
+            this.lastSyncTime = Date.now();
+        },
+
+        requestSync() {
+            if (this.isMaster) return;
+
+            const message = {
+                type: 'sync-request',
+                timestamp: Date.now(),
+                tabId: this.getTabId()
+            };
+
+            if (this.channel) {
+                this.channel.postMessage(message);
+            } else {
+                localStorage.setItem('video-scheduler-sync', JSON.stringify(message));
+            }
+        },
+
+        getSyncData() {
+            const data = {
+                currentIndex: 0,
+                currentVideo: null,
+                totalPlayed: 0,
+                staticDetected: false,
+                timestamp: Date.now()
+            };
+
+            if (window.videoScheduler && window.videoScheduler.schedule) {
+                data.currentIndex = window.videoScheduler.schedule.currentIndex;
+                data.currentVideo = window.videoScheduler.schedule.currentVideo;
+                data.totalPlayed = window.videoScheduler.schedule.totalPlayed;
+                data.staticDetected = window.videoScheduler.schedule.staticDetected;
+            }
+
+            return data;
+        },
+
+        applySyncData(syncData) {
+            if (!syncData || syncData.tabId === this.getTabId()) return;
+
+            if (window.videoScheduler && window.videoScheduler.schedule) {
+                if (syncData.timestamp > this.lastSyncTime) {
+                    window.videoScheduler.schedule.currentIndex = syncData.currentIndex;
+                    window.videoScheduler.schedule.currentVideo = syncData.currentVideo;
+                    window.videoScheduler.schedule.totalPlayed = syncData.totalPlayed;
+                    window.videoScheduler.schedule.staticDetected = syncData.staticDetected;
+
+                    localStorage.setItem('currentVideoIndex', syncData.currentIndex.toString());
+                    localStorage.setItem('totalPlayed', syncData.totalPlayed.toString());
+
+                    console.log('✅ Sync applied from another tab:', {
+                        currentIndex: syncData.currentIndex,
+                        currentVideo: syncData.currentVideo
+                    });
+
+                    this.lastSyncTime = syncData.timestamp;
+                }
+            }
+        },
+
+        getTabId() {
+            if (!this.tabId) {
+                this.tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+            return this.tabId;
+        },
+
+        forceSync() {
+            console.log('🔄 Forcing immediate sync across all tabs');
+            this.determineMasterTab();
+            this.broadcastSync();
+        },
+
+        getSyncStatus() {
+            return {
+                isMaster: this.isMaster,
+                tabId: this.getTabId(),
+                lastSyncTime: this.lastSyncTime,
+                channelType: this.channel ? 'BroadcastChannel' : 'LocalStorage'
+            };
+        }
+    };
+
+    // ==================== INITIALIZATION ====================
+    function initializeAll() {
+        console.log('🚀 Initializing sync and debug systems...');
+
+        // Initialize debug logger
+        window.VideoDebugLogger.init();
+
+        // Initialize cross-tab sync
+        window.CrossTabSync.init();
+
+        // Add global convenience methods
+        window.dumpDebugInfo = () => window.VideoDebugLogger.generateFullReport();
+        window.forceSync = () => window.CrossTabSync.forceSync();
+        window.syncStatus = () => window.CrossTabSync.getSyncStatus();
+
+        console.log('✅ All systems initialized!');
+        console.log('🔧 Available commands:');
+        console.log('  dumpDebugInfo() - Full debug report');
+        console.log('  forceSync() - Sync all tabs');
+        console.log('  syncStatus() - Check sync status');
+
+        // Log initial state
+        setTimeout(() => {
+            console.log('📊 Initial state dump:');
+            window.dumpDebugInfo();
+        }, 2000);
+    }
+
+    // Initialize when page is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeAll);
+    } else {
+        initializeAll();
+    }
+
+})();
+</script>
