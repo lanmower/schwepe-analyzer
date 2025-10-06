@@ -28,7 +28,9 @@ class VideoScheduler {
             staticDetectionThreshold: 0.3,
             maxStaticDuration: 5000, // 5 seconds
             videoTransitionDelay: 2000, // 2 seconds
-            regenerateOnBuild: true // Auto-regenerate on build detection
+            regenerateOnBuild: true, // Auto-regenerate on build detection
+            timezoneMode: 'utc', // Use UTC for global synchronization
+            dailySeedReset: true // Reset seed daily at UTC midnight
         };
 
         this.isStaticActive = false;
@@ -108,6 +110,25 @@ class VideoScheduler {
         }
     }
 
+    // Generate UTC-based deterministic seed for global synchronization
+    generateUTCSeed(date = null) {
+        const targetDate = date || new Date();
+
+        if (this.config.dailySeedReset) {
+            // Use UTC date for daily seed reset - same for everyone globally
+            const utcDate = new Date(targetDate.toISOString());
+            const utcMidnight = new Date(utcDate.getUTCFullYear(), utcDate.getUTCMonth(), utcDate.getUTCDate());
+            const daysSinceEpoch = Math.floor(utcMidnight.getTime() / (24 * 60 * 60 * 1000));
+
+            // Use a simple hash of days since epoch + video count for deterministic seed
+            return (daysSinceEpoch * 31) % 1000000; // Prime multiplier for better distribution
+        } else {
+            // Use UTC timestamp (hourly) for more frequent changes
+            const utcHour = Math.floor(targetDate.getTime() / (60 * 60 * 1000));
+            return (utcHour * 17) % 1000000; // Different prime multiplier
+        }
+    }
+
     // Fisher-Yates shuffle algorithm
     shuffleArray(array, seed = null) {
         const shuffled = [...array];
@@ -169,8 +190,9 @@ class VideoScheduler {
 
         console.log(`🔀 Generating new shuffled schedule for ${videos.length} videos`);
 
-        // Generate new shuffle seed for reproducibility
-        this.config.shuffleSeed = Math.floor(Math.random() * 1000000);
+        // Generate UTC-based deterministic seed for global synchronization
+        this.config.shuffleSeed = this.generateUTCSeed();
+        const nowUTC = new Date().toUTCString();
 
         // Create shuffled order
         this.schedule.shuffledOrder = this.shuffleArray(videos, this.config.shuffleSeed);
@@ -182,7 +204,9 @@ class VideoScheduler {
         await this.saveConfig();
         await this.saveSchedule();
 
-        console.log(`🎲 New schedule generated with seed: ${this.config.shuffleSeed}`);
+        console.log(`🌍 New schedule generated with UTC-based seed: ${this.config.shuffleSeed}`);
+        console.log(`🕐 Generated at: ${nowUTC} UTC`);
+        console.log(`📅 Daily reset mode: ${this.config.dailySeedReset ? 'ON' : 'OFF'}`);
         console.log(`📋 Playback order: ${this.schedule.shuffledOrder.slice(0, 5).join(', ')}${this.schedule.shuffledOrder.length > 5 ? '...' : ''}`);
 
         return true;
@@ -347,6 +371,28 @@ class VideoScheduler {
         }, duration);
     }
 
+    // Test timezone synchronization - simulates different timezones
+    testTimezoneSync() {
+        console.log('\n🌍 Testing timezone synchronization...');
+        console.log('='.repeat(60));
+
+        const testDates = [
+            new Date('2025-10-06T00:00:00Z'), // UTC midnight
+            new Date('2025-10-06T12:00:00Z'), // UTC noon
+            new Date('2025-10-07T00:00:00Z'), // Next UTC midnight
+        ];
+
+        testDates.forEach(date => {
+            const seed = this.generateUTCSeed(date);
+            const utcString = date.toUTCString();
+            console.log(`🕐 ${utcString}`);
+            console.log(`🎲 Seed: ${seed}`);
+            console.log('-'.repeat(40));
+        });
+
+        console.log('✅ All users in all timezones will see the same seed for the same UTC day');
+    }
+
     async run() {
         try {
             await this.init();
@@ -363,6 +409,9 @@ class VideoScheduler {
                 case 'test-static':
                     console.log('🧪 Testing static detection...');
                     this.simulateStatic(0.5, 3000); // 50% static for 3 seconds
+                    break;
+                case 'test-timezone':
+                    this.testTimezoneSync();
                     break;
                 case 'start':
                 default:

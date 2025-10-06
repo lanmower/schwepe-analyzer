@@ -1,8 +1,10 @@
 {
-  "shuffleSeed": 655085,
+  "shuffleSeed": 631346,
   "scheduleRebuildInterval": 3600000,
   "staticDetectionThreshold": 0.3,
   "maxStaticDuration": 5000,
   "videoTransitionDelay": 2000,
-  "regenerateOnBuild": true
+  "regenerateOnBuild": true,
+  "timezoneMode": "utc",
+  "dailySeedReset": true
 }

@@ -18,6 +18,7 @@
     "schedule:info": "node video-scheduler.js info",
     "schedule:regenerate": "node video-scheduler.js regenerate",
     "schedule:test-static": "node video-scheduler.js test-static",
+    "schedule:test-timezone": "node video-scheduler.js test-timezone",
     "schedule:build": "BUILD_ENV=true node video-scheduler.js regenerate"
   },
   "keywords": [
