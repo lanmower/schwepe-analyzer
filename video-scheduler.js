@@ -204,6 +204,9 @@ class VideoScheduler {
         await this.saveConfig();
         await this.saveSchedule();
 
+        // Also save a position file for browser synchronization
+        await this.savePosition();
+
         console.log(`🌍 New schedule generated with UTC-based seed: ${this.config.shuffleSeed}`);
         console.log(`🕐 Generated at: ${nowUTC} UTC`);
         console.log(`📅 Daily reset mode: ${this.config.dailySeedReset ? 'ON' : 'OFF'}`);
